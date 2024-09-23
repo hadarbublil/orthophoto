@@ -13,6 +13,7 @@ def process_file(file_path):
                                  similarity_threshold=0.28,
                                  min_group_size=10)
     if output_dir:
+        result_text.delete(1.0, tk.END)
         result_text.insert(tk.END, "Video frames extracted and filtered.\n")
     else:
         result_text.insert(tk.END, "Processing stopped.\n")
@@ -26,18 +27,21 @@ def select_file():
 
 def stop_processing():
     m.is_processing = False
-    result_text.insert(tk.END, "Stopping processing.\n")
+    result_text.delete(1.0, tk.END)
+    result_text.insert(tk.END, "Stopping....\n")
 
 
 if __name__ == '__main__':
     root = tk.Tk()
     root.title("Files Antivirus")
     root.configure(bg='black')
+    root.resizable(False, False)
 
-    file_button = tk.Button(root, text="Upload Video", command=lambda: threading.Thread(target=select_file).start())
+    file_button = tk.Button(root, text="Upload Video", command=lambda: threading.Thread(target=select_file).start(),
+                            height=3, width=15)
     file_button.pack(pady=10)
 
-    dir_button = tk.Button(root, text="Stop Processing", fg="red", command=stop_processing)
+    dir_button = tk.Button(root, text="Stop Processing", fg="red", command=stop_processing, height=1, width=15)
     dir_button.pack(pady=10)
 
     result_text = tk.Text(root, wrap='word', height=15, width=50)

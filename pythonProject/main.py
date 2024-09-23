@@ -1,6 +1,4 @@
-import itertools
 import typing
-from functools import cache
 from typing import Iterator, Iterable
 
 import cv2
@@ -79,8 +77,8 @@ def sim2(f1, f2):
 
     sift = cv2.SIFT_create()
 
-    keypoints1, descriptors1 = sift.detectAndCompute(f1, None)
-    keypoints2, descriptors2 = sift.detectAndCompute(f2, None)
+    kp1, descriptors1 = sift.detectAndCompute(f1, None)
+    kp2, descriptors2 = sift.detectAndCompute(f2, None)
 
     bf = cv2.BFMatcher(cv2.NORM_L2)
     matches = bf.knnMatch(descriptors1, descriptors2, k=2)
@@ -90,7 +88,7 @@ def sim2(f1, f2):
         if m.distance < 0.75 * n.distance:
             good_matches.append(m)
 
-    return len(good_matches) / min(len(keypoints1), len(keypoints2))
+    return len(good_matches) / min(len(kp1), len(kp2))
 
 
 def sim3(img1, img2):
@@ -101,7 +99,7 @@ def sim3(img1, img2):
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = bf.match(des1, des2)
     matches = sorted(matches, key=lambda x: x.distance)
-    good_matches = [m for m in matches if m.distance < 50]  # distance threshold for good matches
+    good_matches = [m for m in matches if m.distance < 50]
 
     similarity_percentage = (len(good_matches) / min(len(kp1), len(kp2)))
 
@@ -116,8 +114,8 @@ def reduce_noise_gaussian(frame: Frame, kernel_size: tuple[int, int] = (5, 5), s
 def process_frames(frames: Iterable[Frame]) -> Iterator[Frame]:
     for frame in frames:
         loguru.logger.info(f"blurr before processed {calc_blurr(frame)}")
-        adjusted_frame = adjust_lighting(frame)  # Adjust lighting
-        sharpened_frame = sharpen_frame(adjusted_frame)  # Sharpen the adjusted frame
+        adjusted_frame = adjust_lighting(frame)
+        sharpened_frame = sharpen_frame(adjusted_frame)
         reduced_noise_frame = reduce_noise_gaussian(sharpened_frame)
         yield reduced_noise_frame
 
@@ -154,7 +152,7 @@ def frame_capture(
         if len(group) < min_group_size:
             continue
 
-        folder_path = os.path.join(output_dir, f"group_{count}")
+        folder_path = os.path.join(output_dir, f"group_{count}", "images")
         save_frames_to_folder(folder_path, group)
         break  # todo: currently stopping after first group
 
@@ -196,7 +194,8 @@ def load_frames_from_folder(folder_path: str) -> list[Frame]:
     return frames
 
 
-#  docker run -ti --rm -v c:/Users/User/PycharmProjects/orthomosaic/pythonProject:/datasets opendronemap/odm --project-path /datasets --end-with odm_orthophoto --orthophoto-resolution 1 filtered_group_frames
+# docker run -ti --rm -v c:/Users/User/PycharmProjects/orthomosaic/pythonProject/filtered_group_frames:/datasets opendronemap/odm --project-path /datasets --end-with odm_orthophoto --orthophoto-resolution 1 <add group number>
+
 
 if __name__ == '__main__':
     video_path = r"C:\Users\User\Desktop\DemoVideofromCrane.mp4"
@@ -204,9 +203,8 @@ if __name__ == '__main__':
         video_path,
         sample_rate=15,
         blurr_threshold=400,
-        similarity_threshold=0.29,
+        similarity_threshold=0.28,
         min_group_size=10,
     )
 
-    base_path = r"C:\Users\User\PycharmProjects\orthomosaic\pythonProject\filtered_group_frames"
-    # od.run_odm_for_folders(base_path)
+    # base_path = r"C:\Users\User\PycharmProjects\orthomosaic\pythonProject\filtered_group_frames"
