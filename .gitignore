@@ -1,0 +1,4 @@
+/.venv/
+.idea/
+/pythonProject/filtered_group_frames/
+*.pyc
